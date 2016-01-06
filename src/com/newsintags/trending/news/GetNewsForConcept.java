@@ -1,0 +1,62 @@
+package com.newsintags.trending.news;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.newsintags.util.MongoDbUtil;
+
+/**
+ * Servlet implementation class GetNewsForConcept
+ */
+@WebServlet("/GetNewsForConcept")
+public class GetNewsForConcept extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public GetNewsForConcept() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String callback = request.getParameter("callback");
+		String conceptId = request.getParameter("conceptId");
+		JSONObject resultObj = new JSONObject();
+		JSONArray newArray = new JSONArray();
+		try{
+			newArray = MongoDbUtil.getNewsForConcepts(conceptId);
+			resultObj.put("status", "success");
+			resultObj.put("newsList", newArray);
+			response.setContentType("application/json");
+			response.getWriter().write(callback+"("+resultObj.toString()+")");
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			resultObj.put("status", "failure");
+			response.setContentType("application/json");
+			response.getWriter().write(callback+"("+resultObj.toString()+")");
+		}
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+	}
+
+}
