@@ -55,6 +55,7 @@ public class GetTrendingNews extends HttpServlet {
 			 JSONObject jsonsiteObj = new JSONObject(siteObj.toString());
 			 JSONObject combined = new JSONObject();
 			 combined.put("newsDetails", jsonnewsObj);
+			 combined.put("sentiment", jsonnewsObj.get("sentiment"));
 			 combined.put("conceptDetails", jsonconceptObj);
 			 combined.put("siteDetails", jsonsiteObj);
 			 JSONArray conceptArray = MongoDbUtil.getAllConceptsForNews(entry.getKey(),"NewsConceptCollection");

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,6 +18,10 @@ import twitter4j.TwitterFactory;
 import twitter4j.User;
 import twitter4j.conf.ConfigurationBuilder;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.newsintags.util.DbHelper;
 import com.newsintags.util.MongoDbUtil;
 
 /**
@@ -49,7 +54,10 @@ public class GetTwitterUserDetails extends HttpServlet {
 		TwitterFactory tf = new TwitterFactory(cb.build());
 		Twitter twitter = tf.getInstance();
 		User user;
+		List<User> users;
 		org.json.JSONObject userDetails = new org.json.JSONObject();
+		DB db = DbHelper.getDbConnection();
+		DBCollection table = db.getCollection("UserWishlist");
 		try {
 			user = twitter.showUser("nebulatechies7");
 			userDetails.put("id", user.getId());
@@ -62,6 +70,12 @@ public class GetTwitterUserDetails extends HttpServlet {
 			DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
 			df.format(hitTime);
 			MongoDbUtil.insertUser(user.getName(),user.getBiggerProfileImageURL(),user.getScreenName(),hitTime);
+			long cursorNew = -1;
+			users=twitter.getFriendsList("nebulatechies7", cursorNew);
+			userDetails.put("userWistList", users.size());
+			for(User u: users){
+				MongoDbUtil.insertUsersWishlist(user.getScreenName()+"", u.getName(), table);
+			}
 			response.setContentType("application/json");
 			response.getWriter().write(callback+"("+userDetails.toString()+")");
 		} catch (TwitterException e) {

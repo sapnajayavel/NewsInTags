@@ -3,6 +3,7 @@ package com.newsintags.twitter.login;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.User;
 import twitter4j.conf.ConfigurationBuilder;
+
 
 
 
@@ -65,6 +67,7 @@ public class GetFollowingDetails extends HttpServlet {
 		String following;
 		DB db = DbHelper.getDbConnection();
 		 DBCollection siteDoc = db.getCollection("ConceptCollection");
+		 DBCollection userWishlistDoc = db.getCollection("UserWishlist");
 		 DBCursor cursor = null;
 		 BasicDBObject conceptObj = null;
 		 String conceptId;
@@ -74,6 +77,17 @@ public class GetFollowingDetails extends HttpServlet {
 		try {
 			long cursorNew = -1;
 			List<User> users=twitter.getFriendsList("nebulatechies7", cursorNew);
+			BasicDBObject whereQuery = new BasicDBObject();
+		    whereQuery.put("userId", userName);
+		    DBCursor cur ;
+		   // System.out.println("Count cur"+cur.count());
+		    String concept;
+		    ArrayList<String> concArr = new ArrayList<String>();
+		    cur =  userWishlistDoc.find(whereQuery);
+		    while(cur.hasNext())
+			 {
+		    	concArr.add(cur.next().get("userLike").toString());
+			 }
 			for(User u: users){
 				following=u.getName();
 				cursor = siteDoc.find();
@@ -91,9 +105,23 @@ public class GetFollowingDetails extends HttpServlet {
 						conceptNewsObj.put("newsArray", finalNewsArray);
 						finalArray.put(conceptNewsObj);
 					}	
-					
+					//cur =  userWishlistDoc.find(whereQuery);
+					 
+					 for (int i = 0; i < concArr.size(); i++) {
+						 concept = concArr.get(i);
+						 System.out.println("User concepts" + concept + ":"+conceptName);
+					    	if(concept.toLowerCase().contains(conceptName.toLowerCase()) || conceptName.toLowerCase().contains(concept.toLowerCase())){
+								conceptNewsObj.put("following", following);
+								finalNewsArray = MongoDbUtil.getNewsForConcepts(conceptId);
+								conceptNewsObj.put("newsArray", finalNewsArray);
+								finalArray.put(conceptNewsObj);
+							}
+						}
 				}
 			}
+			
+		  
+		   
 			finalObject.put("interestFeeds", finalArray);
 			finalObject.put("status", "success");
 			response.setContentType("application/json");

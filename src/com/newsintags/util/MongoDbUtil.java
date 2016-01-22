@@ -479,20 +479,31 @@ public class MongoDbUtil {
 	  {
 		  BasicDBObject userConceptObj  = (BasicDBObject) dbcursor.next();
 		  BasicDBList conceptArray= (BasicDBList) userConceptObj.get("conceptId");
+		  DB db = DbHelper.getDbConnection();
+		  DBCollection conceptDoc ;
+		  DBCollection newsConceptDoc ;
+		  DBCursor cursorNew;
+		  DBCursor cursor;
 		  if(conceptArray.size() > 0)
 		  {
 			  for(int i=0; i<conceptArray.size();i++){
 				  firstObj = new JSONObject();
 				  String conceptId =(String) conceptArray.get(i);
-				  DB db = DbHelper.getDbConnection();
-					DBCollection conceptDoc = db.getCollection("ConceptCollection");
-					BasicDBObject whereQuery = new BasicDBObject();
-			    	whereQuery.put("_id", new ObjectId(conceptId ));
-			    	firstObj.put("conceptId", conceptId);
-			    	DBCursor cursor = conceptDoc.find(whereQuery);
-			    	if(cursor.hasNext()){
-			    		String conceptName = (String) cursor.next().get("concept");
+				  conceptDoc = db.getCollection("ConceptCollection");
+				  newsConceptDoc = db.getCollection("NewsConceptCollection");
+				  BasicDBObject whereQuery = new BasicDBObject();
+			      whereQuery.put("_id", new ObjectId(conceptId ));
+			      firstObj.put("conceptId", conceptId);
+			      cursor = conceptDoc.find(whereQuery);
+			      if(cursor.hasNext()){
+			    	String conceptName = (String) cursor.next().get("concept");
+			    	System.out.println("conceptName" + conceptName + "conceptId" + conceptId);
+			    	BasicDBObject whereQue = new BasicDBObject();
+			    		whereQue.put("conceptId", conceptId );
+			    		cursorNew = newsConceptDoc.find(whereQue);
 			    		firstObj.put("conceptName", conceptName);
+			    		if(cursorNew.count() > 0)
+			    			firstObj.put("newsCount", cursorNew.next().get("count"));
 			    	}
 			    	array.put(firstObj);
 			  } 
@@ -578,16 +589,51 @@ public class MongoDbUtil {
 		 return array;
 		 
 	 }
-	 public static void main(String[] args) {
-		//insertUserConcept("558fa6ce46381500786b34a4", "sapz811");
-		//System.out.println(getAllUserConcepts("sapz811").toString());
-		//System.out.println(getNewsForConcepts("558fa6ce46381500786b34a4").toString());
-		 //insertSites();
-		 //System.out.println("Date"+getDateFromNewsConceptCollection("5617fb39c762070078cb820f","5617fb38c762070078cb820a","NewsConceptCollection"));
-		 getTrendingNews();
-	}
+	
+	 public static void insertUsersWishlist(String userName, String userLikes, DBCollection table)
+	 {
+			BasicDBObject document = new BasicDBObject();
+				if(checkIfConceptExists(userLikes,userName)){
+			        document.put("userId", userName);
+			        document.put("userLike", userLikes);
+			        table.insert(document);
+				}
+		        
+			
+			
+	 }
 
+	 public static void updateUsersWishlist(String userName, String likedConcept)
+	 {
+		 DB db = DbHelper.getDbConnection();
+		 DBCollection userWishlistDoc = db.getCollection("UserWishlist");
+		 BasicDBObject document ;
+		 System.out.println("LikedConcept" + likedConcept);
+		 for (String concept: likedConcept.split(",")){
+			 System.out.println("Splitting concepts"+concept);
+	    	if(checkIfConceptExists(concept,userName)){
+	    		document = new BasicDBObject();
+	    		document.put("userId", userName);
+		        document.put("userLike", concept);
+		        userWishlistDoc.insert(document);
+	    	}
+		 }
+		 
+	 }
 	 
+	 public static boolean checkIfConceptExists(String concept,String userId)
+	 {
+		 DB db = DbHelper.getDbConnection();
+		 DBCollection userWishlistDoc = db.getCollection("UserWishlist");
+		 BasicDBObject whereQuery = new BasicDBObject();
+	     whereQuery.put("userLike", concept);
+	     whereQuery.put("userId", userId);
+	    	DBCursor cursor = userWishlistDoc.find(whereQuery);
+	    	if(cursor.count() == 0){
+	    		return true;
+	    	}
+	    return false;
+	 }
 	 
 	 
 	 

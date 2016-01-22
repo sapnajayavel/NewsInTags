@@ -55,6 +55,7 @@ public class GetNewsFromSites {
 			{
 				continue;
 			}
+			System.out.println("Feed data"+entry.toString());
 			String sentiment = GetHomelineTweets.getSentiment(textToAlchemy);
 			Date newSDate = entry.getPublishedDate();
 			DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
@@ -107,6 +108,7 @@ public class GetNewsFromSites {
 	public static void main(String[] args) throws MalformedURLException, XPathExpressionException, SAXException, ParserConfigurationException {
 		//getNews("thehindu", "http://www.thehindu.com/news/?service=rss");
 		//getNews("ndtvnews","http://feeds.feedburner.com/NDTV-Trending");
+		//getNews("techcrunch","http://techcrunch.com/feed","","");
 		
 	}
 	
